@@ -9,20 +9,13 @@
 
 //Quotes for Local Libraries, <> for included libraries in Arduino
 
-int status = WL_IDLE_STATUS;     // status value when not connected to network
-unsigned int localPort = 58431;  // choose a port for communication with the LabVIEW program
-char ssid[] = SECRET_SSID;       // network name from arduino secrets.n file
-char pass[] = SECRET_PSSWD;      // WPA password from arduino_secrets.h file
-int ledPin = 5;                  // The pin used to control the LED
-IPAddress featherIP;             // To display the IP of the feather in IP form xxx.xxx.xxx.xxx
-WiFiServer server(localPort);    // creates server that listens Ior incoming connections on port localPort
-
 const int ThumbFSR = A0;
 const int PointFSR = A1;
 const int MiddleFSR = A2;
 const int RingFSR = A3;
 const int PinkyFSR = A4;
 const int EMG_IN = A5;
+int onoff = 6;
 
 // Measure the voltage at 5V and resistance of your 3.3k resistor, and enter
 const float VCC = 3.3;       // Measured voltage of Ardunio 5V line
@@ -30,7 +23,9 @@ const float R_DIV = 3230.0;  // Measured resistance of 3.3k resistor
 
 
 void setup() {
-  Serial.begin(9600);
+  //  Serial.begin(9600);
+  Serial.println("Test 00A");
+
   pinMode(ThumbFSR, INPUT);
   pinMode(PointFSR, INPUT);
   pinMode(MiddleFSR, INPUT);
@@ -43,23 +38,16 @@ void setup() {
   myservo_ring.attach(12);
   myservo_pinky.attach(13);
   myservo_emg.attach(5);
-
-
-  while (status != WL_CONNECTED) {  // status = WL_CONNECTED when connection is established
-    status = WiFi.begin(ssid, pass);
-    delay(2000);  //wait for connection to be established by checking status until it is = WL_CONNECIED
-  }
-
-  Serial.print("Connected to Wifi network: ");  // Confirm feather connected to network
-  Serial.println(WiFi.SSID());                  // Print network name (SSID)
-  Serial.println(featherIP = WiFi.localIP());   // IP address of feather to use in LabVIEW program
-  server.begin();                               // server starts listenino for incomino connections
+  pinMode(onoff, INPUT);
 }
 
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
 void loop() {
-  char dataBuffer;                         // character sent by the client
-  WiFiClient client = server.available();  // listen for a client connected to the server
-  if (!client) return;                     // if not able to create a client, end loop function
 
   int ThumbFSR_V = analogRead(ThumbFSR);
   int PointFSR_V = analogRead(PointFSR);
@@ -80,41 +68,37 @@ void loop() {
   } else {
     int val_EMG = map(EMG, 0, 1023, 0, 180);
   }
-  // sets the servo position according to the scaled value
 
-  while (client.connected()) {     // tests whether a client is connected
-    while (client.available()) {   // as long as there is at least one character written by the client
-      dataBuffer = client.read();  // read the character
-    }
-    Serial.println(dataBuffer);
-    switch (dataBuffer) {
-      case 'M':
-        MiddleFinger();
-        break;
-      case 'F':
-        FightOn();
-        break;
-      case 'T':
-        ThumbsUp();
-        break;
-      case 'O':
-        Pointer();
-        break;
-      case 'P':
-        PinkyPromis();
-        break;
-      case 'G':
-        FingerGun();
-        break;
-      default:
-        myservo_thumb.write(EMG);
-        myservo_point.write(EMG);
-        myservo_middle.write(EMG);
-        myservo_ring.write(EMG);
-        myservo_pinky.write(EMG);
-        myservo_emg.write(val_fingers);
-        delay(50);
-        break;
-    }
+  Serial.print("Thumb:");
+  Serial.print(ThumbFSR_V);
+  Serial.print("  ");
+  Serial.print("Pointer:");
+  Serial.print(PointFSR_V);
+  Serial.print("  ");
+  Serial.print("Middle:");
+  Serial.print(MiddleFSR_V);
+  Serial.print("  ");
+  Serial.print("Ring:");
+  Serial.print(RingFSR_V);
+  Serial.print("  ");
+  Serial.print("Pinky:");
+  Serial.print(PinkyFSR_V);
+  Serial.print("  ");
+  Serial.print("Digital:");
+  Serial.print(onoff);
+  Serial.print("  ");
+  Serial.print("EMG:");
+  Serial.println(EMG);
+
+  // sets the servo position according to the scaled value
+  if (digitalRead(onoff) == LOW) {
+    myservo_thumb.write(EMG);
+    myservo_point.write(EMG);
+    myservo_middle.write(EMG);
+    myservo_ring.write(EMG);
+    myservo_pinky.write(EMG);
+    myservo_emg.write(val_fingers);
+    Serial.println("going");
+    delay(50);
   }
 }

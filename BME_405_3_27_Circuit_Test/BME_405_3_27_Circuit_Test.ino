@@ -88,6 +88,7 @@ void loop()
     myservo_middle.write(val_middle);
     myservo_ring.write(val_ring);
     myservo_pinky.write(val_pinky);
+    delay(50);
     
             
 }
